@@ -1,0 +1,83 @@
+@page "/analyses/create"
+@rendermode InteractiveServer
+@using CVAnalysisHub.Application.AnalysisRuns
+@inject CreateAnalysisRunViewModel ViewModel
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Analysis</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1>Create Analysis</h1>
+        <p class="section-lead">
+            This creates an analysis record. The background processor can now use a real YoloDotNet engine when the app is configured for it.
+        </p>
+    </div>
+</div>
+
+@if (ViewModel.IsLoading)
+{
+    <p>Loading videos...</p>
+}
+else
+{
+    <section class="section-card form-card">
+        <EditForm Model="ViewModel" OnValidSubmit="HandleValidSubmitAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label" for="video-id">Video</label>
+                <InputSelect id="video-id" class="form-select" @bind-Value="ViewModel.SelectedVideoId">
+                    <option value="">Select a video</option>
+                    @foreach (var video in ViewModel.AvailableVideos)
+                    {
+                        <option value="@video.Id">@video.OriginalFileName</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => ViewModel.SelectedVideoId" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="model-name">Model name</label>
+                <InputText
+                    id="model-name"
+                    class="form-control"
+                    @bind-Value="ViewModel.ModelName" />
+                <ValidationMessage For="() => ViewModel.ModelName" />
+            </div>
+
+            <p class="form-note">
+                New runs are queued automatically. With `ComputerVision:Provider` set to `YoloDotNet`, the worker samples frames from the uploaded video and renders an annotated preview output.
+            </p>
+
+            <div class="form-actions">
+                <button class="btn btn-primary" type="submit" disabled="@ViewModel.IsSaving">
+                    @(ViewModel.IsSaving ? "Saving..." : "Create analysis")
+                </button>
+                <a class="btn btn-outline-secondary" href="/analyses">Cancel</a>
+            </div>
+        </EditForm>
+    </section>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    private Guid? VideoId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadAsync();
+
+        if (VideoId.HasValue)
+        {
+            ViewModel.SelectVideo(VideoId.Value);
+        }
+    }
+
+    private async Task HandleValidSubmitAsync()
+    {
+        await ViewModel.CreateAsync();
+        NavigationManager.NavigateTo("/analyses");
+    }
+}

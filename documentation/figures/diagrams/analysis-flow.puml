@@ -1,0 +1,22 @@
+@startuml
+start
+:Upload source video;
+:Persist Video record;
+:Create AnalysisRun with status = Queued;
+:Background worker polls queued runs;
+:Set run status = Processing;
+:Resolve selected inference engine;
+:Extract sampled frames with ffmpeg;
+:Run YOLO object detection;
+:Draw bounding boxes on frames;
+:Persist DetectionResults;
+:Render annotated output video;
+if (Success?) then (yes)
+  :Set status = Completed;
+  :Save OutputRelativePath;
+else (no)
+  :Set status = Failed;
+  :Persist FailureReason;
+endif
+stop
+@enduml

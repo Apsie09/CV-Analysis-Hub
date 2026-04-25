@@ -1,0 +1,338 @@
+@page "/analyses/{AnalysisRunId:guid}"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@using CVAnalysisHub.Application.AnalysisRuns
+@inject AnalysisRunDetailsViewModel ViewModel
+
+<PageTitle>Analysis Details</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1>Analysis Details</h1>
+        <p class="section-lead">
+            This page shows the stored detections and the annotated preview generated from sampled frames of the uploaded video.
+        </p>
+    </div>
+
+    <a class="btn btn-outline-secondary" href="/analyses">Back to analyses</a>
+</div>
+
+@if (ViewModel.IsLoading && ViewModel.AnalysisRun is null)
+{
+    <p>Loading analysis details...</p>
+}
+else if (ViewModel.AnalysisRun is null)
+{
+    <section class="section-card">
+        <h2>Analysis not found</h2>
+        <p class="section-lead">The requested analysis run could not be found.</p>
+    </section>
+}
+else
+{
+    <section class="section-card analysis-hero">
+        <div class="analysis-hero-copy">
+            <p class="eyebrow">Run Status</p>
+            <div class="analysis-hero-header">
+                <div>
+                    <h2>@ViewModel.AnalysisRun.VideoName</h2>
+                    <p class="section-lead">@ViewModel.AnalysisRun.ProgressDescription</p>
+                </div>
+                <span class="status-badge @ViewModel.AnalysisRun.StatusCssClass">@ViewModel.AnalysisRun.Status</span>
+            </div>
+
+            <div class="analysis-progress-shell">
+                <div class="analysis-progress-track">
+                    <div class="analysis-progress-fill @ViewModel.AnalysisRun.StatusCssClass" style="width: @($"{ViewModel.AnalysisRun.ProgressPercent}%")"></div>
+                </div>
+                <div class="upload-progress-meta">
+                    <span>@ViewModel.AnalysisRun.ProgressHeadline</span>
+                    <strong>@ViewModel.AnalysisRun.ProgressPercent%</strong>
+                </div>
+            </div>
+
+            <div class="analysis-stage-strip">
+                <div class="analysis-stage @GetQueuedStageCssClass(ViewModel.AnalysisRun.Status)">Queued</div>
+                <div class="analysis-stage @GetProcessingStageCssClass(ViewModel.AnalysisRun.Status)">Processing</div>
+                <div class="analysis-stage @GetReadyStageCssClass(ViewModel.AnalysisRun.Status)">Ready</div>
+            </div>
+        </div>
+
+        <div class="analysis-hero-sidebar">
+            <div class="analysis-meta-item">
+                <span class="metric-label">Model</span>
+                <strong>@ViewModel.AnalysisRun.ModelName</strong>
+            </div>
+            <div class="analysis-meta-item">
+                <span class="metric-label">Stored video</span>
+                <strong>@ViewModel.AnalysisRun.StoredVideoName</strong>
+            </div>
+            <div class="analysis-meta-item">
+                <span class="metric-label">Created</span>
+                <strong>@ViewModel.AnalysisRun.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</strong>
+            </div>
+            <div class="analysis-meta-item">
+                <span class="metric-label">Completed</span>
+                <strong>@(ViewModel.AnalysisRun.CompletedAtUtc?.ToString("yyyy-MM-dd HH:mm") ?? "-")</strong>
+            </div>
+            <div class="analysis-meta-item">
+                <span class="metric-label">Objects detected</span>
+                <strong>@ViewModel.AnalysisRun.DetectedObjectCount</strong>
+            </div>
+            @if (ViewModel.LastUpdatedAtUtc is not null)
+            {
+                <p class="form-note">Last checked @ViewModel.LastUpdatedAtUtc.Value.ToString("HH:mm:ss") UTC</p>
+            }
+        </div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(ViewModel.AnalysisRun.FailureReason))
+    {
+        <section class="analysis-banner is-failed">
+            <strong>Failure reason:</strong> @ViewModel.AnalysisRun.FailureReason
+        </section>
+    }
+
+    @if (ViewModel.AnalysisRun.DetectionResults.Count > 0)
+    {
+        <section class="section-card">
+            <div class="page-header">
+                <div>
+                    <h2>Detected Objects</h2>
+                    <p class="section-lead">A quick label summary from the persisted detections for this run.</p>
+                </div>
+            </div>
+            <div class="detection-pill-row">
+                @foreach (var detectionGroup in GetDetectionGroups(ViewModel.AnalysisRun))
+                {
+                    <span class="detection-pill">@detectionGroup.Label <strong>@detectionGroup.Count</strong></span>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="details-grid media-preview-grid">
+        <article class="section-card">
+            <div class="page-header">
+                <div>
+                    <h2>Source Video</h2>
+                    <p class="section-lead">The uploaded source media stored by the platform.</p>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ViewModel.AnalysisRun.OriginalVideoUrl))
+                {
+                    <a class="btn btn-outline-secondary" href="@ViewModel.AnalysisRun.OriginalVideoUrl" target="_blank">Open source</a>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(ViewModel.AnalysisRun.OriginalVideoUrl))
+            {
+                <video class="analysis-video-player" controls preload="metadata" src="@ViewModel.AnalysisRun.OriginalVideoUrl"></video>
+            }
+            else
+            {
+                <p class="section-lead">No uploaded source video is available for this record.</p>
+            }
+        </article>
+
+        <article class="section-card">
+            <div class="page-header">
+                <div>
+                    <h2>Output Video</h2>
+                    <p class="section-lead">
+                        This preview is rendered from sampled video frames with detection overlays so you can inspect the run end to end.
+                    </p>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(ViewModel.AnalysisRun.OutputVideoUrl))
+                {
+                    <a class="btn btn-outline-secondary" href="@ViewModel.AnalysisRun.OutputVideoUrl" target="_blank">Open output</a>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(ViewModel.AnalysisRun.OutputVideoUrl))
+            {
+                <video class="analysis-video-player" controls preload="metadata" src="@ViewModel.AnalysisRun.OutputVideoUrl"></video>
+            }
+            else if (ViewModel.AnalysisRun.IsActive)
+            {
+                <div class="analysis-pending-media">
+                    <div class="analysis-progress-track">
+                        <div class="analysis-progress-fill @ViewModel.AnalysisRun.StatusCssClass" style="width: @($"{ViewModel.AnalysisRun.ProgressPercent}%")"></div>
+                    </div>
+                    <p class="section-lead">The output video appears automatically once preprocessing finishes.</p>
+                </div>
+            }
+            else
+            {
+                <p class="section-lead">No output video is available for this analysis run.</p>
+            }
+        </article>
+    </section>
+
+    <section class="section-card">
+        <h2>Detection Results</h2>
+
+        @if (ViewModel.AnalysisRun.DetectionResults.Count == 0)
+        {
+            <p class="section-lead">No detection results have been stored for this analysis yet.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Frame</th>
+                    <th>Label</th>
+                    <th>Confidence</th>
+                    <th>X</th>
+                    <th>Y</th>
+                    <th>Width</th>
+                    <th>Height</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var detection in ViewModel.AnalysisRun.DetectionResults)
+                {
+                    <tr>
+                        <td>@detection.FrameNumber</td>
+                        <td>@detection.Label</td>
+                        <td>@detection.Confidence.ToString("0.00")</td>
+                        <td>@detection.X.ToString("0.##")</td>
+                        <td>@detection.Y.ToString("0.##")</td>
+                        <td>@detection.Width.ToString("0.##")</td>
+                        <td>@detection.Height.ToString("0.##")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public Guid AnalysisRunId { get; set; }
+    private CancellationTokenSource? refreshLoopCts;
+    private Task? refreshLoopTask;
+    private bool isDisposed;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        await ViewModel.LoadAsync(AnalysisRunId, cancellationToken);
+        EnsureRefreshLoop();
+    }
+
+    private void EnsureRefreshLoop()
+    {
+        if (ViewModel.ShouldAutoRefresh)
+        {
+            StartRefreshLoop();
+            return;
+        }
+
+        StopRefreshLoop();
+    }
+
+    private void StartRefreshLoop()
+    {
+        if (refreshLoopTask is not null)
+        {
+            return;
+        }
+
+        refreshLoopCts = new CancellationTokenSource();
+        refreshLoopTask = RunRefreshLoopAsync(refreshLoopCts.Token);
+    }
+
+    private async Task RunRefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
+
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await ViewModel.LoadAsync(AnalysisRunId, cancellationToken);
+                await InvokeAsync(StateHasChanged);
+
+                if (!ViewModel.ShouldAutoRefresh)
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            refreshLoopCts?.Dispose();
+            refreshLoopCts = null;
+            refreshLoopTask = null;
+
+            if (!isDisposed)
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void StopRefreshLoop()
+    {
+        refreshLoopCts?.Cancel();
+    }
+
+    private static string GetQueuedStageCssClass(string status) =>
+        status switch
+        {
+            "Queued" => "is-current",
+            "Processing" or "Completed" or "Failed" => "is-complete",
+            _ => string.Empty
+        };
+
+    private static string GetProcessingStageCssClass(string status) =>
+        status switch
+        {
+            "Processing" => "is-current",
+            "Completed" or "Failed" => "is-complete",
+            _ => string.Empty
+        };
+
+    private static string GetReadyStageCssClass(string status) =>
+        status switch
+        {
+            "Completed" => "is-complete",
+            "Failed" => "is-failed",
+            _ => string.Empty
+        };
+
+    private static IEnumerable<(string Label, int Count)> GetDetectionGroups(AnalysisRunDetailsDto analysisRun) =>
+        analysisRun.DetectionResults
+            .GroupBy(result => result.Label)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key)
+            .Select(group => (group.Key, group.Count()));
+
+    public async ValueTask DisposeAsync()
+    {
+        isDisposed = true;
+        StopRefreshLoop();
+
+        if (refreshLoopTask is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await refreshLoopTask;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+}

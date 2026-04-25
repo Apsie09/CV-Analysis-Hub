@@ -1,0 +1,52 @@
+@startuml
+skinparam componentStyle rectangle
+
+package "Presentation" {
+  [CVAnalysisHub.Web]
+  [CVAnalysisHub.Avalonia]
+}
+
+package "Application Layer" {
+  [Shared ViewModels]
+  [Reusable Filters]
+  [Reusable Object Lists]
+  [DTOs and Contracts]
+}
+
+package "Domain Layer" {
+  [CVAnalysisHub.Core]
+}
+
+package "Infrastructure Layer" {
+  [EF Core Services]
+  [Media Storage]
+  [Video Processing]
+  [Inference Engines]
+  [Background Worker]
+}
+
+database "SQLite" as sqlite
+database "PostgreSQL" as postgres
+collections "App_Data/media" as media
+
+[CVAnalysisHub.Web] --> [Shared ViewModels]
+[CVAnalysisHub.Avalonia] --> [Shared ViewModels]
+[CVAnalysisHub.Avalonia] --> [Reusable Filters]
+[CVAnalysisHub.Avalonia] --> [Reusable Object Lists]
+[CVAnalysisHub.Web] --> [Reusable Filters]
+[CVAnalysisHub.Web] --> [Reusable Object Lists]
+
+[Shared ViewModels] --> [DTOs and Contracts]
+[DTOs and Contracts] --> [CVAnalysisHub.Core]
+[EF Core Services] --> [CVAnalysisHub.Core]
+[EF Core Services] --> sqlite
+[EF Core Services] --> postgres
+
+[Media Storage] --> media
+[Video Processing] --> media
+[Inference Engines] --> [Video Processing]
+[Background Worker] --> [Inference Engines]
+[Shared ViewModels] --> [EF Core Services]
+[Shared ViewModels] --> [Media Storage]
+
+@enduml

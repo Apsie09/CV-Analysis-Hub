@@ -1,0 +1,117 @@
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[bulgarian,english]{babel}
+\usepackage{csquotes}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{etoolbox}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\AtBeginDocument{\selectlanguage{bulgarian}}
+
+\addto\captionsbulgarian{
+    \renewcommand{\contentsname}{Съдържание}
+    \renewcommand{\chaptername}{Глава}
+    \renewcommand{\bibname}{Литература}
+    \renewcommand{\figurename}{Фигура}
+    \renewcommand{\tablename}{Таблица}
+    \renewcommand{\lstlistingname}{Код}
+}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue,
+    pdftitle={CVAnalysisHub Documentation},
+    plainpages=false
+}
+
+\crefname{chapter}{глава}{глави}
+\Crefname{chapter}{Глава}{Глави}
+\crefname{section}{раздел}{раздели}
+\Crefname{section}{Раздел}{Раздели}
+\crefname{subsection}{подраздел}{подраздели}
+\Crefname{subsection}{Подраздел}{Подраздели}
+\crefname{figure}{фигура}{фигури}
+\Crefname{figure}{Фигура}{Фигури}
+\crefname{table}{таблица}{таблици}
+\Crefname{table}{Таблица}{Таблици}
+\crefname{lstlisting}{код}{кодове}
+\Crefname{lstlisting}{Код}{Кодове}
+
+\raggedbottom
+\emergencystretch=2em
+\setstretch{1.15}
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+
+\makeatletter
+\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
+\makeatother
+\pretocmd{\chapter}{\par\vspace{1.5\baselineskip}}{}{}
+
+\titleformat{\chapter}[block]
+  {\bfseries\Large}
+  {\chaptername\ \thechapter}
+  {0.8em}
+  {\LARGE}
+\titlespacing*{\chapter}{0pt}{1.2em}{0.8em}
+
+\lstdefinestyle{csharpstyle}{
+    language=[Sharp]C,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{teal},
+    stringstyle=\color{red!70!black},
+    showstringspaces=false,
+    breaklines=true,
+    columns=fullflexible,
+    keepspaces=true,
+    frame=single,
+    rulecolor=\color{black!20},
+    backgroundcolor=\color{black!2},
+    numbers=left,
+    numberstyle=\scriptsize\color{black!45},
+    xleftmargin=1.8em,
+    framexleftmargin=1.2em,
+    captionpos=b
+}
+
+\lstset{style=csharpstyle}
+
+\newcommand{\projectname}{CVAnalysisHub}
+
+\newcommand{\optionalfigure}[4][0.95\textwidth]{
+    \begin{figure}[htbp]
+        \centering
+        \IfFileExists{#2}{
+            \includegraphics[
+                width=#1,
+                height=0.58\textheight,
+                keepaspectratio
+            ]{#2}
+        }{
+            \fbox{
+                \parbox[c][6cm][c]{0.86\textwidth}{
+                    \centering
+                    \textbf{Placeholder for figure}\\[0.6em]
+                    File expected at: \texttt{#2}
+                }
+            }
+        }
+        \caption{#3}
+        \label{#4}
+    \end{figure}
+}

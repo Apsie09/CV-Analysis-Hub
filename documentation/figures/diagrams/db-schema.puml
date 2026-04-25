@@ -1,0 +1,48 @@
+@startuml
+hide circle
+hide methods
+skinparam classAttributeIconSize 0
+
+entity Video {
+  * Id : Guid
+  --
+  FileName : string
+  StoredRelativePath : string?
+  OriginalFileName : string
+  ContentType : string?
+  FileSizeBytes : long?
+  Duration : TimeSpan
+  UploadedAtUtc : DateTime
+  Status : string
+}
+
+entity AnalysisRun {
+  * Id : Guid
+  --
+  VideoId : Guid
+  ModelName : string
+  CreatedAtUtc : DateTime
+  CompletedAtUtc : DateTime?
+  Status : string
+  OutputRelativePath : string?
+  FailureReason : string?
+  DetectedObjectCount : int
+}
+
+entity DetectionResult {
+  * Id : Guid
+  --
+  AnalysisRunId : Guid
+  FrameNumber : int
+  Label : string
+  Confidence : double
+  X : double
+  Y : double
+  Width : double
+  Height : double
+}
+
+Video ||--o{ AnalysisRun
+AnalysisRun ||--o{ DetectionResult
+
+@enduml

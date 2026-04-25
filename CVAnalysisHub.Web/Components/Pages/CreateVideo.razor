@@ -1,0 +1,199 @@
+@page "/videos/create"
+@rendermode InteractiveServer
+@implements IDisposable
+@using CVAnalysisHub.Application.Videos
+@using Microsoft.AspNetCore.Components.Forms
+@inject CreateVideoViewModel ViewModel
+@inject NavigationManager NavigationManager
+
+<PageTitle>Upload Video</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1>Upload Video</h1>
+        <p class="section-lead">
+            Drop a video into the studio, watch the preprocessing progress, and hand it off to the analysis pipeline without leaving the page.
+        </p>
+    </div>
+</div>
+
+<section class="upload-shell">
+    <EditForm Model="ViewModel" OnValidSubmit="HandleValidSubmitAsync">
+        <DataAnnotationsValidator />
+        <div class="upload-grid">
+            <section class="section-card upload-dropzone @(isDragActive ? "is-active" : string.Empty) @(ViewModel.HasSelectedFile ? "has-file" : string.Empty)"
+                     @ondragenter="HandleDragEnter"
+                     @ondragleave="HandleDragLeave"
+                     @ondragover:preventDefault="true">
+                <InputFile OnChange="HandleFileSelected" accept="video/*" class="upload-dropzone-input" />
+
+                <div class="upload-dropzone-content">
+                    <p class="eyebrow">Drag and Drop</p>
+                    <h2>Drop a video here</h2>
+                    <p class="section-lead">
+                        Supports `mp4`, `mov`, `avi`, `mkv`, and `webm`. Click or drop to select a file.
+                    </p>
+
+                    @if (ViewModel.HasSelectedFile)
+                    {
+                        <div class="upload-file-chip">
+                            <strong>@selectedFileName</strong>
+                            <span>@selectedFileSize</span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="section-card upload-sidebar">
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label" for="duration-seconds">Estimated duration in seconds</label>
+                    <InputNumber
+                        id="duration-seconds"
+                        class="form-control"
+                        @bind-Value="ViewModel.DurationSeconds" />
+                    <ValidationMessage For="() => ViewModel.DurationSeconds" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(fileValidationMessage))
+                {
+                    <p class="upload-error">@fileValidationMessage</p>
+                }
+
+                <div class="upload-stage-list">
+                    <div class="upload-stage @(ViewModel.ProgressPercent > 0 ? "is-complete" : string.Empty)">1. Select video</div>
+                    <div class="upload-stage @(ViewModel.ProgressPercent >= 15 ? "is-complete" : string.Empty)">2. Upload media</div>
+                    <div class="upload-stage @(ViewModel.ProgressPercent >= 95 ? "is-complete" : string.Empty)">3. Preprocess metadata</div>
+                    <div class="upload-stage @(ViewModel.ProgressPercent == 100 ? "is-complete" : string.Empty)">4. Ready for analysis</div>
+                </div>
+
+                <div class="upload-progress-shell">
+                    <div class="upload-progress-track">
+                        <div class="upload-progress-bar" style="width: @($"{ViewModel.ProgressPercent}%")"></div>
+                    </div>
+                    <div class="upload-progress-meta">
+                        <span>@ViewModel.ProgressMessage</span>
+                        <strong>@ViewModel.ProgressPercent%</strong>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit" disabled="@(!ViewModel.HasSelectedFile || ViewModel.IsSaving)">
+                        @(ViewModel.IsSaving ? "Uploading..." : "Upload video")
+                    </button>
+                    <a class="btn btn-outline-secondary" href="/videos">Cancel</a>
+                </div>
+            </section>
+        </div>
+    </EditForm>
+</section>
+
+@if (ViewModel.UploadedVideo is not null)
+{
+    <section class="section-card upload-result-card">
+        <div class="page-header">
+            <div>
+                <p class="eyebrow">Upload Complete</p>
+                <h2>@ViewModel.UploadedVideo.OriginalFileName</h2>
+                <p class="section-lead">
+                    The source video is saved and ready. Run an analysis next to generate an output video for this upload.
+                </p>
+            </div>
+
+            <div class="button-row">
+                <a class="btn btn-primary" href="@($"/analyses/create?videoId={ViewModel.UploadedVideo.Id}")">Run analysis</a>
+                <a class="btn btn-outline-secondary" href="/videos">Open library</a>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(ViewModel.UploadedVideo.SourceVideoUrl))
+        {
+            <video class="analysis-video-player" controls preload="metadata" src="@ViewModel.UploadedVideo.SourceVideoUrl"></video>
+        }
+    </section>
+}
+
+@code {
+    private const long MaxUploadBytes = 1_073_741_824;
+    private IBrowserFile? selectedFile;
+    private string selectedFileName = "No file selected yet";
+    private string selectedFileSize = string.Empty;
+    private string? fileValidationMessage;
+    private bool isDragActive;
+
+    protected override void OnInitialized()
+    {
+        ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
+    }
+
+    private async void HandleViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleDragEnter()
+    {
+        isDragActive = true;
+    }
+
+    private void HandleDragLeave()
+    {
+        isDragActive = false;
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        isDragActive = false;
+        fileValidationMessage = null;
+
+        var file = e.File;
+
+        if (!file.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase))
+        {
+            selectedFile = null;
+            selectedFileName = "Unsupported file";
+            selectedFileSize = string.Empty;
+            fileValidationMessage = "Please choose a video file.";
+            return;
+        }
+
+        selectedFile = file;
+        selectedFileName = file.Name;
+        selectedFileSize = FormatBytes(file.Size);
+        ViewModel.SetSelectedFile(file.Name, file.ContentType, file.Size);
+    }
+
+    private async Task HandleValidSubmitAsync()
+    {
+        if (selectedFile is null)
+        {
+            fileValidationMessage = "Please select a video file before uploading.";
+            return;
+        }
+
+        await using var contentStream = selectedFile.OpenReadStream(MaxUploadBytes);
+        await ViewModel.CreateAsync(contentStream);
+        selectedFile = null;
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB"];
+        var size = (double)bytes;
+        var unitIndex = 0;
+
+        while (size >= 1024 && unitIndex < units.Length - 1)
+        {
+            size /= 1024;
+            unitIndex++;
+        }
+
+        return $"{size:0.##} {units[unitIndex]}";
+    }
+
+    public void Dispose()
+    {
+        ViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+    }
+}

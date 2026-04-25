@@ -1,0 +1,71 @@
+﻿@page "/"
+@using CVAnalysisHub.Application.Home
+@inject HomeViewModel ViewModel
+
+<PageTitle>Home</PageTitle>
+
+<div class="dashboard-shell">
+    <section class="hero-panel">
+        <div>
+            <p class="eyebrow">CVAnalysisHub</p>
+            <h1>Video analysis management for the rest of the semester.</h1>
+            <p class="hero-copy">
+                This milestone focuses on a clean MVVM foundation: shared ViewModels in the application layer,
+                a Blazor UI bound to those ViewModels, and infrastructure kept behind interfaces.
+            </p>
+        </div>
+
+        <div class="quick-actions">
+            <div class="button-row">
+                <a class="btn btn-primary" href="/videos">Open video library</a>
+                <a class="btn btn-outline-secondary" href="/analyses">View analyses</a>
+                <a class="btn btn-outline-secondary" href="/videos/create">Register a video</a>
+            </div>
+        </div>
+    </section>
+
+    @if (ViewModel.IsLoading)
+    {
+        <p>Loading dashboard...</p>
+    }
+    else
+    {
+        <section class="metric-grid" aria-label="Video summary">
+            <article class="metric-card">
+                <span class="metric-label">Total videos</span>
+                <strong class="metric-value">@ViewModel.TotalVideos</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">Analysis runs</span>
+                <strong class="metric-value">@ViewModel.TotalAnalysisRuns</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">Queued analyses</span>
+                <strong class="metric-value">@ViewModel.QueuedAnalysisRuns</strong>
+            </article>
+
+            <article class="metric-card">
+                <span class="metric-label">Completed analyses</span>
+                <strong class="metric-value">@ViewModel.CompletedCount</strong>
+            </article>
+        </section>
+
+        <section class="section-card">
+            <h2>Latest upload</h2>
+            <p class="section-lead">@ViewModel.LatestVideoName</p>
+            <p>
+                Uploaded:
+                @(ViewModel.LatestUploadUtc?.ToString("yyyy-MM-dd HH:mm 'UTC'") ?? "No uploads yet")
+            </p>
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadAsync();
+    }
+}

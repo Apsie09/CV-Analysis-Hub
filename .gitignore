@@ -1,0 +1,35 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+App_Data/
+.idea/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.DotSettings.user
+*.swp
+*.tmp
+*.log
+run.log
+session.txt
+Thumbs.db
+.DS_Store
+
+# Rider / ReSharper
+*.iml
+
+# Database and generated media/model assets
+**/App_Data/
+*.db
+*.sqlite
+*.sqlite3
+*.onnx
+
+# LaTeX build artifacts
+documentation/build/*
+!documentation/build/.gitkeep
+!documentation/build/main.pdf
+docs/

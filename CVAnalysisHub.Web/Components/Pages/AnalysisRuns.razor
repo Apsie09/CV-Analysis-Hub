@@ -1,0 +1,289 @@
+@page "/analyses"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@using CVAnalysisHub.Application.AnalysisRuns
+@inject AnalysisRunListViewModel ViewModel
+
+<PageTitle>Analyses</PageTitle>
+
+<div class="page-header">
+    <div>
+        <h1>Analyses</h1>
+        <p class="section-lead">
+            Analysis runs are stored separately from videos so future inference providers like YoloDotNet can plug in cleanly.
+        </p>
+        <p class="form-note">Queued runs are processed automatically in the background.</p>
+    </div>
+
+    <a class="btn btn-primary" href="/analyses/create">Create analysis</a>
+</div>
+
+@if (ViewModel.HasActiveRuns)
+{
+    <section class="section-card analysis-live-banner">
+        <div>
+            <p class="eyebrow">Live Processing</p>
+            <h2>Preprocessing is running in the background</h2>
+            <p class="section-lead">
+                This page refreshes automatically while queued or processing analyses are still moving through the pipeline.
+            </p>
+        </div>
+        @if (ViewModel.LastUpdatedAtUtc is not null)
+        {
+            <p class="form-note">Last checked @ViewModel.LastUpdatedAtUtc.Value.ToString("HH:mm:ss") UTC</p>
+        }
+    </section>
+}
+
+@if (ViewModel.IsLoading && ViewModel.AnalysisRuns.Count == 0)
+{
+    <p>Loading analyses...</p>
+}
+else if (ViewModel.AnalysisRuns.Count == 0)
+{
+    <section class="section-card">
+        <h2>@(ViewModel.HasActiveFilters ? "No analyses matched the current filter set" : "No analyses yet")</h2>
+        <p class="section-lead">
+            @(ViewModel.HasActiveFilters
+                ? "Clear the filters or widen the search to see more persisted runs."
+                : "Create the first analysis run to start the preprocessing and inference pipeline.")
+        </p>
+    </section>
+}
+else
+{
+    <SearchFilterPanel
+        Fields="ViewModel.Filters.Fields"
+        Title="Reusable Analysis Search Filters"
+        Description="These controls are generated from shared filter metadata, and the entered values build the database query for the analysis table."
+        OnApply="ApplyFiltersAsync"
+        OnClear="ClearFiltersAsync" />
+
+    <section class="section-card list-controls-card">
+        <div class="page-header">
+            <div>
+                <h2>Reusable Analysis Browser</h2>
+                <p class="section-lead">
+                    This shared list can rebind different objects, switch visible columns dynamically, and return the whole selected analysis run.
+                </p>
+            </div>
+            <div class="button-row">
+                <button class="btn btn-outline-secondary" type="button" @onclick="ReloadAsync">Refresh list</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="ClearDisplay">Clear list</button>
+            </div>
+        </div>
+
+        <div class="column-toggle-row">
+            @foreach (var column in ViewModel.Browser.AvailableColumns)
+            {
+                <label class="column-toggle">
+                    <input
+                        type="checkbox"
+                        checked="@column.IsVisible"
+                        @onchange="args => SetColumnVisibility(column.Key, args.Value)" />
+                    <span>@column.Header</span>
+                </label>
+            }
+        </div>
+    </section>
+
+    <section class="section-card">
+        @if (!ViewModel.Browser.HasItems)
+        {
+            <p class="section-lead">The current visualization is empty. Reload the analysis list to bind a new object set.</p>
+        }
+        else
+        {
+            <ObjectListTable TItem="AnalysisRunDto" ViewModel="ViewModel.Browser" OnRowSelected="HandleSelectedRow">
+                <RowActions Context="analysisRun">
+                    <div class="button-row">
+                        <a class="btn btn-sm btn-primary" href="@($"/analyses/{analysisRun.Id}")">Open details</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="@($"/analyses/create?videoId={analysisRun.VideoId}")">Run again</a>
+                    </div>
+                </RowActions>
+            </ObjectListTable>
+        }
+    </section>
+
+    @if (ViewModel.SelectedAnalysisRun is not null)
+    {
+        <section class="section-card selection-summary-card">
+            <div class="page-header">
+                <div>
+                    <h2>Selected Analysis</h2>
+                    <p class="section-lead">@ViewModel.SelectedAnalysisRun.ProgressDescription</p>
+                </div>
+                <span class="status-badge @ViewModel.SelectedAnalysisRun.StatusCssClass">@ViewModel.SelectedAnalysisRun.Status</span>
+            </div>
+
+            <div class="analysis-progress-shell">
+                <div class="analysis-progress-track">
+                    <div class="analysis-progress-fill @ViewModel.SelectedAnalysisRun.StatusCssClass" style="width: @($"{ViewModel.SelectedAnalysisRun.ProgressPercent}%")"></div>
+                </div>
+                <div class="upload-progress-meta">
+                    <span>@ViewModel.SelectedAnalysisRun.ProgressHeadline</span>
+                    <strong>@ViewModel.SelectedAnalysisRun.ProgressPercent%</strong>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div>
+                    <span class="metric-label">Video</span>
+                    <strong>@ViewModel.SelectedAnalysisRun.VideoName</strong>
+                </div>
+                <div>
+                    <span class="metric-label">Model</span>
+                    <strong>@ViewModel.SelectedAnalysisRun.ModelName</strong>
+                </div>
+                <div>
+                    <span class="metric-label">Created</span>
+                    <strong>@ViewModel.SelectedAnalysisRun.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</strong>
+                </div>
+                <div>
+                    <span class="metric-label">Completed</span>
+                    <strong>@(ViewModel.SelectedAnalysisRun.CompletedAtUtc?.ToString("yyyy-MM-dd HH:mm") ?? "-")</strong>
+                </div>
+                <div>
+                    <span class="metric-label">Objects detected</span>
+                    <strong>@ViewModel.SelectedAnalysisRun.DetectedObjectCount</strong>
+                </div>
+                <div>
+                    <span class="metric-label">Failure reason</span>
+                    <strong>@(ViewModel.SelectedAnalysisRun.FailureReason ?? "-")</strong>
+                </div>
+            </div>
+        </section>
+    }
+}
+
+@code {
+    private CancellationTokenSource? refreshLoopCts;
+    private Task? refreshLoopTask;
+    private bool isDisposed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        await ViewModel.LoadAsync(cancellationToken);
+        EnsureRefreshLoop();
+    }
+
+    private Task ReloadAsync()
+    {
+        return LoadAsync();
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        StopRefreshLoop();
+        await ViewModel.ApplyFiltersAsync();
+        EnsureRefreshLoop();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        StopRefreshLoop();
+        await ViewModel.ClearFiltersAsync();
+        EnsureRefreshLoop();
+    }
+
+    private void ClearDisplay()
+    {
+        StopRefreshLoop();
+        ViewModel.ClearDisplay();
+    }
+
+    private void SetColumnVisibility(string columnKey, object? value)
+    {
+        ViewModel.SetColumnVisibility(columnKey, value as bool? ?? false);
+    }
+
+    private Task HandleSelectedRow(ObjectListRowViewModel<AnalysisRunDto> row)
+    {
+        ViewModel.SelectRow(row);
+        return Task.CompletedTask;
+    }
+
+    private void EnsureRefreshLoop()
+    {
+        if (ViewModel.HasActiveRuns)
+        {
+            StartRefreshLoop();
+            return;
+        }
+
+        StopRefreshLoop();
+    }
+
+    private void StartRefreshLoop()
+    {
+        if (refreshLoopTask is not null)
+        {
+            return;
+        }
+
+        refreshLoopCts = new CancellationTokenSource();
+        refreshLoopTask = RunRefreshLoopAsync(refreshLoopCts.Token);
+    }
+
+    private async Task RunRefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
+
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await ViewModel.LoadAsync(cancellationToken);
+                await InvokeAsync(StateHasChanged);
+
+                if (!ViewModel.HasActiveRuns)
+                {
+                    break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            refreshLoopCts?.Dispose();
+            refreshLoopCts = null;
+            refreshLoopTask = null;
+
+            if (!isDisposed)
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void StopRefreshLoop()
+    {
+        refreshLoopCts?.Cancel();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        isDisposed = true;
+        StopRefreshLoop();
+
+        if (refreshLoopTask is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await refreshLoopTask;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+}

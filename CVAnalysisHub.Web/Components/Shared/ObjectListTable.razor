@@ -1,0 +1,61 @@
+@typeparam TItem
+
+<table class="table object-list-table">
+    <thead>
+    <tr>
+        @foreach (var column in ViewModel.VisibleColumns)
+        {
+            <th>@column.Header</th>
+        }
+        @if (RowActions is not null)
+        {
+            <th>Actions</th>
+        }
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var row in ViewModel.Rows)
+    {
+        <tr class="@GetRowCssClass(row)" @onclick="() => SelectRowAsync(row)">
+            @foreach (var cell in row.Cells)
+            {
+                <td>@cell.Value</td>
+            }
+            @if (RowActions is not null)
+            {
+                <td @onclick:stopPropagation="true">
+                    @RowActions(row.Item)
+                </td>
+            }
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    [Parameter, EditorRequired]
+    public ObjectListViewModel<TItem> ViewModel { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment<TItem>? RowActions { get; set; }
+
+    [Parameter]
+    public EventCallback<ObjectListRowViewModel<TItem>> OnRowSelected { get; set; }
+
+    private string GetRowCssClass(ObjectListRowViewModel<TItem> row)
+    {
+        return EqualityComparer<TItem>.Default.Equals(ViewModel.SelectedItem, row.Item)
+            ? "is-selected"
+            : string.Empty;
+    }
+
+    private async Task SelectRowAsync(ObjectListRowViewModel<TItem> row)
+    {
+        ViewModel.SelectRow(row);
+
+        if (OnRowSelected.HasDelegate)
+        {
+            await OnRowSelected.InvokeAsync(row);
+        }
+    }
+}

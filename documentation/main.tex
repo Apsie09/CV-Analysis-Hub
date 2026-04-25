@@ -1,0 +1,90 @@
+\documentclass[12pt,a4paper]{report}
+
+\input{preamble}
+
+\begin{document}
+\selectlanguage{bulgarian}
+\pagenumbering{gobble}
+
+\begin{titlepage}
+\thispagestyle{plain}
+
+\noindent
+\begin{minipage}{0.17\textwidth}
+    \IfFileExists{figures/branding/3_TU_bg_n.png}{
+        \includegraphics[width=\linewidth]{figures/branding/3_TU_bg_n.png}
+    }{
+        \fbox{
+            \parbox[c][3.5cm][c]{\linewidth}{
+                \centering
+                TU\\logo
+            }
+        }
+    }
+\end{minipage}%
+\hspace{0.03\textwidth}%
+\begin{minipage}{0.8\textwidth}
+    \raggedright
+    \large
+    \textbf{ТЕХНИЧЕСКИ УНИВЕРСИТЕТ -- СОФИЯ}\\[-0.3ex]
+    \rule{\linewidth}{0.2pt}\\[-0.6ex]
+    \textbf{ФАКУЛТЕТ КОМПЮТЪРНИ СИСТЕМИ И ТЕХНОЛОГИИ}\\[0.2cm]
+\end{minipage}
+
+\vspace{3cm}
+
+\begin{center}
+    \textbf{\LARGE КУРСОВ ПРОЕКТ}\\[1cm]
+
+    \normalsize
+    Дисциплина: Програмни Среди\\[0.8cm]
+
+    \textbf{Тема:}\\[0.3cm]
+    \textbf{\projectname{} -- платформа за управление на видео анализи\\
+    с компютърно зрение, Blazor, Avalonia и две СУБД}\\[2.8cm]
+\end{center}
+
+\vspace{0.8cm}
+
+\begin{flushleft}
+\textbf{Изготвил:}\\
+Асен Пантелеев Попов\\
+Фак. № 121223246\\
+Група 38\\
+III курс, КСИ\\
+e-mail: \texttt{asepopov@tu-sofia.bg}
+\end{flushleft}
+
+\vspace{1.2cm}
+
+\begin{flushleft}
+\textbf{Преподавател:}\\
+гл. ас. П. Маринов\\
+\end{flushleft}
+
+\vfill
+
+\begin{center}
+София, 2026 г.
+\end{center}
+\end{titlepage}
+
+\cleardoublepage
+\pagenumbering{roman}
+\setcounter{page}{1}
+\phantomsection
+\tableofcontents
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{chapters/01-introduction}
+\input{chapters/02-technologies}
+\input{chapters/03-environment}
+\input{chapters/04-architecture}
+\input{chapters/05-implementation}
+\input{chapters/06-examples}
+\input{chapters/07-conclusion}
+\input{chapters/08-literature}
+
+\end{document}

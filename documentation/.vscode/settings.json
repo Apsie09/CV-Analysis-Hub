@@ -1,0 +1,38 @@
+{
+  "latex-workshop.latex.rootFile.useSubFile": false,
+  "latex-workshop.latex.outDir": "%DIR%/build",
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.view.pdf.viewer": "tab",
+  "latex-workshop.synctex.afterBuild.enabled": true,
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "pdflatex x2",
+      "tools": [
+        "pdflatex-doc",
+        "pdflatex-doc"
+      ]
+    }
+  ],
+  "latex-workshop.latex.tools": [
+    {
+      "name": "pdflatex-doc",
+      "command": "pdflatex",
+      "args": [
+        "-interaction=nonstopmode",
+        "-synctex=1",
+        "-output-directory=%DIR%/build",
+        "%DOC%"
+      ]
+    }
+  ],
+  "plantuml.render": "PlantUMLServer",
+  "plantuml.server": "https://www.plantuml.com/plantuml",
+  "plantuml.diagramsRoot": "figures/diagrams",
+  "plantuml.exportOutDir": "figures/generated",
+  "plantuml.includepaths": [
+    "figures/diagrams"
+  ],
+  "files.associations": {
+    "*.puml": "plantuml"
+  }
+}

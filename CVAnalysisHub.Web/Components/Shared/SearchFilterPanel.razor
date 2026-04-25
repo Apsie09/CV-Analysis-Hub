@@ -1,0 +1,106 @@
+@using CVAnalysisHub.Application.Common.Filters
+
+<section class="section-card filter-panel-card">
+    <div class="page-header">
+        <div>
+            <h2>@Title</h2>
+            <p class="section-lead">@Description</p>
+        </div>
+        <div class="button-row">
+            <button class="btn btn-primary" type="button" @onclick="ApplyAsync">Apply filters</button>
+            <button class="btn btn-outline-secondary" type="button" @onclick="ClearAsync">Clear filters</button>
+        </div>
+    </div>
+
+    <div class="filter-grid">
+        @foreach (var field in Fields)
+        {
+            <div class="filter-field-card">
+                <label class="filter-label" for="@field.Key">@field.Label</label>
+                <p class="form-note">@field.Description</p>
+
+                @switch (field.Type)
+                {
+                    case FilterFieldType.Text:
+                        <input
+                            id="@field.Key"
+                            class="form-control"
+                            type="text"
+                            placeholder="@field.PrimaryPlaceholder"
+                            @bind="field.PrimaryValue"
+                            @bind:event="oninput" />
+                        break;
+                    case FilterFieldType.Select:
+                        <select id="@field.Key" class="form-select" @bind="field.PrimaryValue">
+                            <option value="">Any</option>
+                            @foreach (var option in field.Options)
+                            {
+                                <option value="@option.Value">@option.Label</option>
+                            }
+                        </select>
+                        break;
+                    case FilterFieldType.NumberRange:
+                        <div class="filter-range-row">
+                            <input
+                                id="@($"{field.Key}-min")"
+                                class="form-control"
+                                type="number"
+                                placeholder="@field.PrimaryPlaceholder"
+                                @bind="field.PrimaryValue" />
+                            <input
+                                id="@($"{field.Key}-max")"
+                                class="form-control"
+                                type="number"
+                                placeholder="@field.SecondaryPlaceholder"
+                                @bind="field.SecondaryValue" />
+                        </div>
+                        break;
+                    case FilterFieldType.DateRange:
+                        <div class="filter-range-row">
+                            <input
+                                id="@($"{field.Key}-from")"
+                                class="form-control"
+                                type="date"
+                                value="@field.PrimaryValue"
+                                @onchange="args => field.PrimaryValue = args.Value?.ToString()" />
+                            <input
+                                id="@($"{field.Key}-to")"
+                                class="form-control"
+                                type="date"
+                                value="@field.SecondaryValue"
+                                @onchange="args => field.SecondaryValue = args.Value?.ToString()" />
+                        </div>
+                        break;
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<FilterFieldViewModel> Fields { get; set; } = null!;
+
+    [Parameter]
+    public string Title { get; set; } = "Search filters";
+
+    [Parameter]
+    public string Description { get; set; } =
+        "Provide values in the generated controls and the matching database query will be rebuilt from them.";
+
+    [Parameter]
+    public EventCallback OnApply { get; set; }
+
+    [Parameter]
+    public EventCallback OnClear { get; set; }
+
+    private Task ApplyAsync()
+    {
+        return OnApply.InvokeAsync();
+    }
+
+    private Task ClearAsync()
+    {
+        return OnClear.InvokeAsync();
+    }
+}
