@@ -33,3 +33,4 @@ documentation/build/*
 !documentation/build/.gitkeep
 !documentation/build/main.pdf
 docs/
+documentation/README.md
