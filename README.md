@@ -53,6 +53,22 @@ The solution follows a layered structure:
 
 The project uses MVVM on the presentation side, but in a realistic layered architecture rather than a single-project `Models / Views / ViewModels` folder layout.
 
+## External Architecture View
+
+The repository was also summarized with [CodeBoarding](https://github.com/CodeBoarding/CodeBoarding), an external architecture-mapping tool that helps with fast repository onboarding. Its high-level view of `CVAnalysisHub` is useful as a compact visual summary of the two presentation clients, the shared application logic, the background analysis processor, the media engine, the persistence layer, and the domain model.
+
+<img src="documentation/figures/screenshots/Codeboarding_output.png" alt="CodeBoarding architecture summary for CVAnalysisHub" width="78%" />
+
+CodeBoarding identifies the following major areas of the project:
+
+- `Application Logic & State`: shared ViewModels, service abstractions, and UI-facing orchestration.
+- `Background Analysis Processor`: hosted background execution for queued analysis jobs.
+- `Web Presentation Layer`: the `Blazor` client.
+- `Desktop Presentation Layer`: the `Avalonia` client.
+- `Computer Vision & Media Engine`: frame extraction, video processing, and YOLO-based detection.
+- `Data Persistence & Infrastructure`: EF Core services, storage, and provider-specific persistence.
+- `Domain Model`: core business entities such as videos, analysis runs, and detection results.
+
 ## Screenshots
 
 ### Blazor Analysis View

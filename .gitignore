@@ -34,3 +34,4 @@ documentation/build/*
 !documentation/build/main.pdf
 docs/
 documentation/README.md
+.codeboarding/
