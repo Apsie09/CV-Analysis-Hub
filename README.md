@@ -6,7 +6,7 @@ The application allows users to upload videos, queue analysis runs, process them
 
 ## Overview
 
-This project was built to satisfy the requirements of a university practical project for `Програмни Среди`. Its main goal is to demonstrate:
+This project was built for a university practical project of my course called `Програмни Среди`. Its main goal is to demonstrate:
 
 - MVVM with shared ViewModels
 - two different UI technologies using the same application layer
@@ -150,7 +150,7 @@ CVAnalysisHub/
 
 ## Project Status
 
-The current version already demonstrates the requirements for:
+The current version demonstrates the following:
 
 - shared MVVM ViewModels across two UI technologies
 - two supported DBMS providers
