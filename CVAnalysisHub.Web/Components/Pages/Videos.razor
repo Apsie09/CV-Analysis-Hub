@@ -23,8 +23,8 @@ else
         Fields="ViewModel.Filters.Fields"
         Title="Reusable Video Search Filters"
         Description="These controls are generated from shared filter metadata, and the entered values build the database query for the video table."
-        OnApply="ApplyFiltersAsync"
-        OnClear="ClearFiltersAsync" />
+        OnApply="ViewModel.ApplyFiltersCommand.ExecuteAsync"
+        OnClear="ViewModel.ClearFiltersCommand.ExecuteAsync" />
 
     <section class="section-card list-controls-card">
         <div class="page-header">
@@ -35,7 +35,7 @@ else
                 </p>
             </div>
             <div class="button-row">
-                <button class="btn btn-outline-secondary" type="button" @onclick="ReloadAsync">Refresh list</button>
+                <button class="btn btn-outline-secondary" type="button" @onclick="ViewModel.ReloadCommand.ExecuteAsync">Refresh list</button>
                 <button class="btn btn-outline-secondary" type="button" @onclick="ClearDisplay">Clear list</button>
             </div>
         </div>
@@ -124,21 +124,6 @@ else
     protected override async Task OnInitializedAsync()
     {
         await ViewModel.LoadAsync();
-    }
-
-    private Task ReloadAsync()
-    {
-        return ViewModel.LoadAsync();
-    }
-
-    private Task ApplyFiltersAsync()
-    {
-        return ViewModel.ApplyFiltersAsync();
-    }
-
-    private Task ClearFiltersAsync()
-    {
-        return ViewModel.ClearFiltersAsync();
     }
 
     private void ClearDisplay()

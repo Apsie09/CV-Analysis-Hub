@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml;
 using CVAnalysisHub.Application.AnalysisRuns;
 using CVAnalysisHub.Application.Home;
 using CVAnalysisHub.Application.Videos;
+using CVAnalysisHub.Avalonia.Services;
 using CVAnalysisHub.Avalonia.ViewModels;
 using CVAnalysisHub.Avalonia.Views;
 using CVAnalysisHub.Infrastructure;
@@ -43,6 +44,11 @@ public partial class App : global::Avalonia.Application
                 services.AddTransient<CreateVideoViewModel>();
                 services.AddTransient<CreateAnalysisRunViewModel>();
                 services.AddTransient<AnalysisRunDetailsViewModel>();
+                services.AddTransient<DesktopMediaService>();
+                services.AddTransient<DesktopNotificationViewModel>();
+                services.AddTransient<DesktopUploadViewModel>();
+                services.AddTransient<VideoWorkspaceViewModel>();
+                services.AddTransient<AnalysisWorkspaceViewModel>();
                 services.AddTransient<MainWindowViewModel>();
                 services.AddTransient<MainWindow>();
             })

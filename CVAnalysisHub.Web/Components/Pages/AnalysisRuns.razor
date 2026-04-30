@@ -174,20 +174,26 @@ else
 
     private Task ReloadAsync()
     {
-        return LoadAsync();
+        return LoadWithCommandAsync(ViewModel.ReloadCommand.ExecuteAsync);
     }
 
     private async Task ApplyFiltersAsync()
     {
         StopRefreshLoop();
-        await ViewModel.ApplyFiltersAsync();
+        await ViewModel.ApplyFiltersCommand.ExecuteAsync();
         EnsureRefreshLoop();
     }
 
     private async Task ClearFiltersAsync()
     {
         StopRefreshLoop();
-        await ViewModel.ClearFiltersAsync();
+        await ViewModel.ClearFiltersCommand.ExecuteAsync();
+        EnsureRefreshLoop();
+    }
+
+    private async Task LoadWithCommandAsync(Func<Task> command)
+    {
+        await command();
         EnsureRefreshLoop();
     }
 

@@ -9,13 +9,24 @@ package "View" {
 }
 
 package "ViewModel" {
-  component "HomeViewModel" as vm_home
-  component "VideoListViewModel" as vm_videos
-  component "CreateVideoViewModel" as vm_create_video
-  component "AnalysisRunListViewModel" as vm_analysis_list
-  component "CreateAnalysisRunViewModel" as vm_create_analysis
-  component "AnalysisRunDetailsViewModel" as vm_analysis_details
-  component "MainWindowViewModel\n(desktop orchestration)" as vm_shell
+  package "Shared Application ViewModels" {
+    component "HomeViewModel" as vm_home
+    component "VideoListViewModel" as vm_videos
+    component "CreateVideoViewModel" as vm_create_video
+    component "AnalysisRunListViewModel" as vm_analysis_list
+    component "CreateAnalysisRunViewModel" as vm_create_analysis
+    component "AnalysisRunDetailsViewModel" as vm_analysis_details
+  }
+
+  package "Avalonia desktop adapters" {
+    component "MainWindowViewModel\n(shell coordinator)" as vm_shell
+    component "VideoWorkspaceViewModel" as vm_video_workspace
+    component "AnalysisWorkspaceViewModel" as vm_analysis_workspace
+    component "DesktopUploadViewModel" as vm_upload
+    component "MediaPreviewViewModel" as vm_preview
+    component "DesktopNotificationViewModel" as vm_notifications
+    component "DesktopMediaService\n(local media adapter)" as desktop_media
+  }
 }
 
 package "Model" {
@@ -34,11 +45,19 @@ view_web --> vm_analysis_details
 
 view_avalonia --> vm_shell
 vm_shell --> vm_home
-vm_shell --> vm_videos
-vm_shell --> vm_create_video
-vm_shell --> vm_analysis_list
-vm_shell --> vm_create_analysis
-vm_shell --> vm_analysis_details
+vm_shell --> vm_video_workspace
+vm_shell --> vm_analysis_workspace
+vm_shell --> vm_notifications
+vm_video_workspace --> vm_videos
+vm_video_workspace --> vm_create_video
+vm_video_workspace --> vm_upload
+vm_video_workspace --> vm_preview
+vm_video_workspace --> desktop_media
+vm_analysis_workspace --> vm_analysis_list
+vm_analysis_workspace --> vm_create_analysis
+vm_analysis_workspace --> vm_analysis_details
+vm_analysis_workspace --> vm_preview
+vm_analysis_workspace --> desktop_media
 
 vm_home --> model_dtos
 vm_videos --> model_dtos

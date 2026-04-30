@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CVAnalysisHub.Avalonia.ViewModels"
+             x:Class="CVAnalysisHub.Avalonia.Views.OverviewView"
+             x:DataType="vm:MainWindowViewModel">
+    <ScrollViewer>
+        <StackPanel Spacing="16">
+            <Border Padding="20" Background="White" CornerRadius="18">
+                <StackPanel Spacing="10">
+                    <TextBlock FontSize="22" FontWeight="SemiBold" Text="Shared HomeViewModel" />
+                    <TextBlock Foreground="#52606D"
+                               Text="These desktop metrics are loaded from the same shared summary ViewModel used by the web application." />
+                    <Button HorizontalAlignment="Left"
+                            Command="{Binding RefreshOverviewCommand}"
+                            Content="Refresh overview" />
+                </StackPanel>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="16">
+                <Border Grid.Column="0" Padding="18" Background="White" CornerRadius="16">
+                    <StackPanel Spacing="6">
+                        <TextBlock Foreground="#52606D" Text="Videos" />
+                        <TextBlock FontSize="30" FontWeight="Bold" Text="{Binding Home.TotalVideos}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Padding="18" Background="White" CornerRadius="16">
+                    <StackPanel Spacing="6">
+                        <TextBlock Foreground="#52606D" Text="Analyses" />
+                        <TextBlock FontSize="30" FontWeight="Bold" Text="{Binding Home.TotalAnalysisRuns}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Padding="18" Background="White" CornerRadius="16">
+                    <StackPanel Spacing="6">
+                        <TextBlock Foreground="#52606D" Text="Queued" />
+                        <TextBlock FontSize="30" FontWeight="Bold" Text="{Binding Home.QueuedAnalysisRuns}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Padding="18" Background="White" CornerRadius="16">
+                    <StackPanel Spacing="6">
+                        <TextBlock Foreground="#52606D" Text="Completed" />
+                        <TextBlock FontSize="30" FontWeight="Bold" Text="{Binding Home.CompletedCount}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Padding="18" Background="White" CornerRadius="16">
+                <StackPanel Spacing="6">
+                    <TextBlock Foreground="#52606D" Text="Latest upload" />
+                    <TextBlock FontSize="20" FontWeight="SemiBold" Text="{Binding Home.LatestVideoName}" />
+                    <TextBlock Text="{Binding Home.LatestUploadUtc}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

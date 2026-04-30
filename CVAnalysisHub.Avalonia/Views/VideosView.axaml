@@ -1,0 +1,173 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CVAnalysisHub.Avalonia.ViewModels"
+             xmlns:views="using:CVAnalysisHub.Avalonia.Views"
+             xmlns:objectLists="using:CVAnalysisHub.Application.Common.ObjectLists"
+             x:Class="CVAnalysisHub.Avalonia.Views.VideosView"
+             x:DataType="vm:MainWindowViewModel">
+                <ScrollViewer>
+                    <StackPanel Spacing="16">
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <views:FilterPanelView Fields="{Binding VideoWorkspace.Videos.Filters.Fields}"
+                                                   ApplyCommand="{Binding VideoWorkspace.ApplyVideoFiltersCommand}"
+                                                   ClearCommand="{Binding VideoWorkspace.ClearVideoFiltersCommand}" />
+                        </Border>
+
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock FontSize="22" FontWeight="SemiBold" Text="Upload Video" />
+                                <TextBlock Foreground="#52606D"
+                                           Text="Choose a local video file, send it through the shared CreateVideoViewModel, and refresh the desktop library automatically." />
+
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                                    <Button Click="SelectUploadFile_OnClick" Content="Choose file" />
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding VideoWorkspace.Upload.FileName}" />
+                                        <TextBlock Foreground="#52606D" Text="{Binding VideoWorkspace.Upload.FileSize}" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            Command="{Binding VideoWorkspace.UploadSelectedVideoCommand}"
+                                            IsEnabled="{Binding VideoWorkspace.CanUploadSelectedVideo}"
+                                            Content="Upload to library" />
+                                </Grid>
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock FontWeight="SemiBold" Text="Estimated duration in seconds" />
+                                    <TextBox Text="{Binding VideoWorkspace.CreateVideo.DurationSeconds, Mode=TwoWay}" Width="160" />
+                                </StackPanel>
+
+                                <ProgressBar Minimum="0"
+                                             Maximum="100"
+                                             Height="12"
+                                             Value="{Binding VideoWorkspace.CreateVideo.ProgressPercent}" />
+                                <TextBlock Foreground="#52606D" Text="{Binding VideoWorkspace.CreateVideo.ProgressMessage}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock FontSize="22" FontWeight="SemiBold" Text="Video Library" />
+                                        <TextBlock Foreground="#52606D"
+                                                   Text="Browse uploaded videos, inspect the selected item, and start a new analysis from the same shared application data." />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                        <Button Command="{Binding VideoWorkspace.ReloadVideosCommand}" Content="Refresh list" />
+                                        <Button Command="{Binding VideoWorkspace.ClearVideosCommand}" Content="Clear list" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Expander IsExpanded="False">
+                                    <Expander.Header>
+                                        <TextBlock FontWeight="SemiBold" Text="Customize visible columns" />
+                                    </Expander.Header>
+
+                                    <ItemsControl Margin="0,12,0,0" ItemsSource="{Binding VideoWorkspace.Videos.Browser.AvailableColumns}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="objectLists:ObjectListColumnViewModel">
+                                                <CheckBox Margin="0,0,12,8"
+                                                          Content="{Binding Header}"
+                                                          IsChecked="{Binding IsVisible, Mode=TwoWay}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
+
+                                <Grid ColumnDefinitions="2.4*,1*" ColumnSpacing="16">
+                                    <Border Padding="12" Background="#FBFCFE" CornerRadius="12">
+                                        <StackPanel Spacing="8">
+                                            <ItemsControl ItemsSource="{Binding VideoWorkspace.Videos.Browser.VisibleColumns}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="objectLists:ObjectListColumnViewModel">
+                                                        <Border Width="180" Padding="8" Margin="0,0,8,0" Background="#E8EEF7" CornerRadius="10">
+                                                            <TextBlock FontWeight="SemiBold" Text="{Binding Header}" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <ListBox ItemsSource="{Binding VideoWorkspace.Videos.Browser.Rows}"
+                                                     SelectedItem="{Binding VideoWorkspace.Videos.Browser.SelectedRow, Mode=TwoWay}"
+                                                     MinHeight="260">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <ItemsControl ItemsSource="{Binding Cells}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal" />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="objectLists:ObjectListCellViewModel">
+                                                                    <Border Width="180" Padding="8" BorderBrush="#D8E1EB" BorderThickness="0,0,0,1">
+                                                                        <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="1" Padding="18" Background="#FBFCFE" CornerRadius="12">
+                                        <StackPanel Spacing="10">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                <TextBlock FontSize="22" FontWeight="SemiBold" Text="Selected Video(Preview)" />
+                                                <Button Grid.Column="1"
+                                                        Command="{Binding VideoWorkspace.OpenSelectedVideoCommand}"
+                                                        IsEnabled="{Binding VideoWorkspace.HasSelectedVideoSource}"
+                                                        Content="Open video" />
+                                            </Grid>
+                                            <TextBlock Foreground="#52606D"/>
+                                            <Border Height="220" Background="#0F172A" CornerRadius="12" ClipToBounds="True">
+                                                <Grid>
+                                                    <Image Source="{Binding VideoWorkspace.SelectedVideoPreview.Bitmap}"
+                                                           Stretch="UniformToFill"
+                                                           IsVisible="{Binding VideoWorkspace.SelectedVideoPreview.HasBitmap}" />
+                                                    <StackPanel HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                Spacing="6"
+                                                                IsVisible="{Binding VideoWorkspace.SelectedVideoPreview.MissingBitmap}">
+                                                        <TextBlock HorizontalAlignment="Center"
+                                                                   FontSize="18"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="White"
+                                                                   Text="Preview unavailable" />
+                                                        <TextBlock HorizontalAlignment="Center"
+                                                                   Foreground="#CBD5E1"
+                                                                   Text="Open the video to inspect it in the system player." />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                            <TextBlock FontWeight="SemiBold" Text="Original file" />
+                                            <TextBlock Text="{Binding VideoWorkspace.Videos.Browser.SelectedItem.OriginalFileName, FallbackValue=No selection}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Stored file" />
+                                            <TextBlock Text="{Binding VideoWorkspace.Videos.Browser.SelectedItem.FileName, FallbackValue=-}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Duration" />
+                                            <TextBlock Text="{Binding VideoWorkspace.Videos.Browser.SelectedItem.Duration, FallbackValue=-}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Video status" />
+                                            <TextBlock Text="{Binding VideoWorkspace.Videos.Browser.SelectedItem.Status, FallbackValue=-}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Content type" />
+                                            <TextBlock Text="{Binding VideoWorkspace.Videos.Browser.SelectedItem.ContentType, FallbackValue=-}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+</UserControl>

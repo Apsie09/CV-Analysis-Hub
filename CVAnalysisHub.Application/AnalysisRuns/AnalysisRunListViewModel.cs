@@ -3,7 +3,7 @@ using CVAnalysisHub.Application.Common.ObjectLists;
 
 namespace CVAnalysisHub.Application.AnalysisRuns;
 
-public sealed class AnalysisRunListViewModel(IAnalysisRunService analysisRunService) : ViewModelBase
+public sealed class AnalysisRunListViewModel : ViewModelBase
 {
     private static readonly ObjectListColumnDefinition<AnalysisRunDto>[] ColumnDefinitions =
     [
@@ -18,12 +18,27 @@ public sealed class AnalysisRunListViewModel(IAnalysisRunService analysisRunServ
     private IReadOnlyList<AnalysisRunDto> analysisRuns = Array.Empty<AnalysisRunDto>();
     private bool isLoading;
     private DateTime? lastUpdatedAtUtc;
+    private readonly IAnalysisRunService analysisRunService;
 
     public AnalysisRunFilterViewModel Filters { get; } = new();
+
+    public AsyncRelayCommand ReloadCommand { get; }
+
+    public AsyncRelayCommand ApplyFiltersCommand { get; }
+
+    public AsyncRelayCommand ClearFiltersCommand { get; }
 
     public ObjectListViewModel<AnalysisRunDto> Browser { get; } = new(
         ColumnDefinitions,
         ["videoName", "createdAtUtc", "status", "detectedObjectCount"]);
+
+    public AnalysisRunListViewModel(IAnalysisRunService analysisRunService)
+    {
+        this.analysisRunService = analysisRunService;
+        ReloadCommand = new AsyncRelayCommand(() => LoadAsync());
+        ApplyFiltersCommand = new AsyncRelayCommand(() => ApplyFiltersAsync());
+        ClearFiltersCommand = new AsyncRelayCommand(() => ClearFiltersAsync());
+    }
 
     public IReadOnlyList<AnalysisRunDto> AnalysisRuns
     {

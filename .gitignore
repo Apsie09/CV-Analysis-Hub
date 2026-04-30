@@ -35,3 +35,4 @@ documentation/build/*
 docs/
 documentation/README.md
 .codeboarding/
+skills-lock.json

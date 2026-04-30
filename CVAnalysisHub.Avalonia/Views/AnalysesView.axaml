@@ -1,0 +1,307 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CVAnalysisHub.Avalonia.ViewModels"
+             xmlns:views="using:CVAnalysisHub.Avalonia.Views"
+             xmlns:objectLists="using:CVAnalysisHub.Application.Common.ObjectLists"
+             x:Class="CVAnalysisHub.Avalonia.Views.AnalysesView"
+             x:DataType="vm:MainWindowViewModel">
+                <ScrollViewer>
+                    <StackPanel Spacing="16">
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <views:FilterPanelView Fields="{Binding AnalysisWorkspace.AnalysisRuns.Filters.Fields}"
+                                                   ApplyCommand="{Binding AnalysisWorkspace.ApplyAnalysisFiltersCommand}"
+                                                   ClearCommand="{Binding AnalysisWorkspace.ClearAnalysisFiltersCommand}" />
+                        </Border>
+
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock FontSize="22" FontWeight="SemiBold" Text="Run New Analysis" />
+                                <TextBlock Foreground="#52606D"/>
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock FontWeight="SemiBold" Text="Source video" />
+                                    <ComboBox ItemsSource="{Binding AnalysisWorkspace.CreateAnalysis.AvailableVideos}"
+                                              SelectedItem="{Binding AnalysisWorkspace.SelectedCreateAnalysisVideo, Mode=TwoWay}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding OriginalFileName}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock FontWeight="SemiBold" Text="Model name" />
+                                    <TextBox Text="{Binding AnalysisWorkspace.CreateAnalysis.ModelName, Mode=TwoWay}" Width="220" />
+                                </StackPanel>
+
+                                <Button HorizontalAlignment="Left"
+                                        Command="{Binding AnalysisWorkspace.CreateAnalysisCommand}"
+                                        IsEnabled="{Binding AnalysisWorkspace.CanCreateAnalysis}"
+                                        Content="Queue analysis" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock FontSize="22" FontWeight="SemiBold" Text="Analysis History" />
+                                        <TextBlock Foreground="#52606D"
+                                                   Text="Review queued, running, completed, or failed analyses and inspect the selected run in detail." />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                        <Button Command="{Binding AnalysisWorkspace.ReloadAnalysisRunsCommand}" Content="Refresh list" />
+                                        <Button Command="{Binding AnalysisWorkspace.ClearAnalysisRunsCommand}" Content="Clear list" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Expander IsExpanded="False">
+                                    <Expander.Header>
+                                        <TextBlock FontWeight="SemiBold" Text="Customize visible columns" />
+                                    </Expander.Header>
+
+                                    <ItemsControl Margin="0,12,0,0" ItemsSource="{Binding AnalysisWorkspace.AnalysisRuns.Browser.AvailableColumns}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="objectLists:ObjectListColumnViewModel">
+                                                <CheckBox Margin="0,0,12,8"
+                                                          Content="{Binding Header}"
+                                                          IsChecked="{Binding IsVisible, Mode=TwoWay}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
+
+                                <Grid ColumnDefinitions="2.2*,1.2*" ColumnSpacing="16">
+                                    <Border Padding="12" Background="#FBFCFE" CornerRadius="12">
+                                        <StackPanel Spacing="8">
+                                            <ItemsControl ItemsSource="{Binding AnalysisWorkspace.AnalysisRuns.Browser.VisibleColumns}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="objectLists:ObjectListColumnViewModel">
+                                                        <Border Width="180" Padding="8" Margin="0,0,8,0" Background="#E8EEF7" CornerRadius="10">
+                                                            <TextBlock FontWeight="SemiBold" Text="{Binding Header}" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <ListBox ItemsSource="{Binding AnalysisWorkspace.AnalysisRuns.Browser.Rows}"
+                                                     SelectedItem="{Binding AnalysisWorkspace.AnalysisRuns.Browser.SelectedRow, Mode=TwoWay}"
+                                                     MinHeight="260">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <ItemsControl ItemsSource="{Binding Cells}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal" />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="objectLists:ObjectListCellViewModel">
+                                                                    <Border Width="180" Padding="8" BorderBrush="#D8E1EB" BorderThickness="0,0,0,1">
+                                                                        <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Grid.Column="1" Padding="18" Background="#FBFCFE" CornerRadius="12">
+                                        <StackPanel Spacing="10">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                <TextBlock FontSize="22" FontWeight="SemiBold" Text="Analysis Details" />
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                    <Button Command="{Binding AnalysisWorkspace.OpenSelectedSourceVideoCommand}"
+                                                            IsEnabled="{Binding AnalysisWorkspace.HasSelectedAnalysisSourceVideo}"
+                                                            Content="Open source" />
+                                                    <Button Command="{Binding AnalysisWorkspace.OpenSelectedOutputVideoCommand}"
+                                                            IsEnabled="{Binding AnalysisWorkspace.HasSelectedAnalysisOutputVideo}"
+                                                            Content="Open output" />
+                                                    <Button Command="{Binding AnalysisWorkspace.RefreshSelectedAnalysisDetailsCommand}"
+                                                            Content="Refresh details" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <TextBlock Foreground="#52606D"
+                                                       Text="The details pane is fed by the shared AnalysisRunDetailsViewModel and updates when the selected analysis row changes." />
+                                            <TextBlock FontWeight="SemiBold" Text="Video" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.VideoName, FallbackValue=Select an analysis to inspect details}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Model" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.ModelName, FallbackValue=-}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Analysis status" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.Status, FallbackValue=-}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Progress headline" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.ProgressHeadline, FallbackValue=-}" TextWrapping="Wrap" />
+                                            <TextBlock FontWeight="SemiBold" Text="Progress description" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.ProgressDescription, FallbackValue=-}" TextWrapping="Wrap" />
+                                            <TextBlock FontWeight="SemiBold" Text="Objects detected" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.DetectedObjectCount, FallbackValue=-}" />
+                                            <TextBlock FontWeight="SemiBold" Text="Failure reason" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.FailureReason, FallbackValue=-}" TextWrapping="Wrap" />
+                                            <TextBlock FontWeight="SemiBold" Text="Last updated" />
+                                            <TextBlock Text="{Binding AnalysisWorkspace.AnalysisDetails.LastUpdatedAtUtc, FallbackValue=-}" />
+
+                                            <ProgressBar Minimum="0"
+                                                         Maximum="100"
+                                                         Height="12"
+                                                         Value="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.ProgressPercent}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock FontSize="22" FontWeight="SemiBold" Text="Detected Objects" />
+                                <TextBlock Foreground="#52606D"
+                                           Text="A quick label summary from the persisted detections for the selected run." />
+
+                                <ItemsControl ItemsSource="{Binding AnalysisWorkspace.SelectedAnalysisDetectionSummary}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="10,6" Margin="0,0,10,10" Background="#E8EEF7" CornerRadius="999">
+                                                <TextBlock FontWeight="SemiBold" Text="{Binding}" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                            <Border Padding="18" Background="White" CornerRadius="16">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock FontSize="22" FontWeight="SemiBold" Text="Source Video" />
+                                            <TextBlock Foreground="#52606D"
+                                                       Text="Preview the uploaded source media stored by the platform." />
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Command="{Binding AnalysisWorkspace.OpenSelectedSourceVideoCommand}"
+                                                IsEnabled="{Binding AnalysisWorkspace.HasSelectedAnalysisSourceVideo}"
+                                                Content="Open source" />
+                                    </Grid>
+
+                                    <Border Height="340" Background="#0F172A" CornerRadius="12" ClipToBounds="True">
+                                        <Grid>
+                                            <Image Source="{Binding AnalysisWorkspace.SelectedAnalysisSourcePreview.Bitmap}"
+                                                   Stretch="UniformToFill"
+                                                   IsVisible="{Binding AnalysisWorkspace.SelectedAnalysisSourcePreview.HasBitmap}" />
+                                            <StackPanel HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Spacing="6"
+                                                        IsVisible="{Binding AnalysisWorkspace.SelectedAnalysisSourcePreview.MissingBitmap}">
+                                                <TextBlock HorizontalAlignment="Center"
+                                                           FontSize="18"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"
+                                                           Text="Source preview unavailable" />
+                                                <TextBlock HorizontalAlignment="Center"
+                                                           Foreground="#CBD5E1"
+                                                           Text="Use Open source to inspect the original video." />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Padding="18" Background="White" CornerRadius="16">
+                                <StackPanel Spacing="12">
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock FontSize="22" FontWeight="SemiBold" Text="Output Video" />
+                                            <TextBlock Foreground="#52606D"
+                                                       Text="Preview the annotated output so the detections are visible at a glance." />
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Command="{Binding AnalysisWorkspace.OpenSelectedOutputVideoCommand}"
+                                                IsEnabled="{Binding AnalysisWorkspace.HasSelectedAnalysisOutputVideo}"
+                                                Content="Open output" />
+                                    </Grid>
+
+                                    <Border Height="340" Background="#0F172A" CornerRadius="12" ClipToBounds="True">
+                                        <Grid>
+                                            <Image Source="{Binding AnalysisWorkspace.SelectedAnalysisOutputPreview.Bitmap}"
+                                                   Stretch="UniformToFill"
+                                                   IsVisible="{Binding AnalysisWorkspace.SelectedAnalysisOutputPreview.HasBitmap}" />
+                                            <StackPanel HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Spacing="6"
+                                                        IsVisible="{Binding AnalysisWorkspace.SelectedAnalysisOutputPreview.MissingBitmap}">
+                                                <TextBlock HorizontalAlignment="Center"
+                                                           FontSize="18"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"
+                                                           Text="Output preview unavailable" />
+                                                <TextBlock HorizontalAlignment="Center"
+                                                           Foreground="#CBD5E1"
+                                                           Text="This run may still be processing or has no generated output yet." />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Border Padding="18" Background="White" CornerRadius="16">
+                            <StackPanel Spacing="10">
+                                <TextBlock FontSize="22" FontWeight="SemiBold" Text="Detection Results" />
+                                <TextBlock Foreground="#52606D"
+                                           Text="Persisted detections from the selected analysis run are surfaced here from the shared details DTO." />
+
+                                <Border Padding="10" Background="#EEF3F8" CornerRadius="10">
+                                    <Grid ColumnDefinitions="70,120,90,80,80,80,80" ColumnSpacing="12">
+                                        <TextBlock Grid.Column="0" FontWeight="SemiBold" Text="Frame" />
+                                        <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="Label" />
+                                        <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="Confidence" />
+                                        <TextBlock Grid.Column="3" FontWeight="SemiBold" Text="X" />
+                                        <TextBlock Grid.Column="4" FontWeight="SemiBold" Text="Y" />
+                                        <TextBlock Grid.Column="5" FontWeight="SemiBold" Text="Width" />
+                                        <TextBlock Grid.Column="6" FontWeight="SemiBold" Text="Height" />
+                                    </Grid>
+                                </Border>
+
+                                <ItemsControl ItemsSource="{Binding AnalysisWorkspace.AnalysisDetails.AnalysisRun.DetectionResults}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="10" Margin="0,0,0,8" Background="#FBFCFE" CornerRadius="10">
+                                                <Grid ColumnDefinitions="70,120,90,80,80,80,80" ColumnSpacing="12">
+                                                    <TextBlock Grid.Column="0" Text="{Binding FrameNumber}" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Label}" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding Confidence}" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding X}" />
+                                                    <TextBlock Grid.Column="4" Text="{Binding Y}" />
+                                                    <TextBlock Grid.Column="5" Text="{Binding Width}" />
+                                                    <TextBlock Grid.Column="6" Text="{Binding Height}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+</UserControl>

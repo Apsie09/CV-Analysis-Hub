@@ -3,7 +3,7 @@ using CVAnalysisHub.Application.Common.ObjectLists;
 
 namespace CVAnalysisHub.Application.Videos;
 
-public sealed class VideoListViewModel(IVideoService videoService) : ViewModelBase
+public sealed class VideoListViewModel : ViewModelBase
 {
     private static readonly ObjectListColumnDefinition<VideoDto>[] ColumnDefinitions =
     [
@@ -16,12 +16,27 @@ public sealed class VideoListViewModel(IVideoService videoService) : ViewModelBa
 
     private IReadOnlyList<VideoDto> videos = Array.Empty<VideoDto>();
     private bool isLoading;
+    private readonly IVideoService videoService;
 
     public VideoFilterViewModel Filters { get; } = new();
+
+    public AsyncRelayCommand ReloadCommand { get; }
+
+    public AsyncRelayCommand ApplyFiltersCommand { get; }
+
+    public AsyncRelayCommand ClearFiltersCommand { get; }
 
     public ObjectListViewModel<VideoDto> Browser { get; } = new(
         ColumnDefinitions,
         ["originalFileName", "duration", "uploadedAtUtc", "status"]);
+
+    public VideoListViewModel(IVideoService videoService)
+    {
+        this.videoService = videoService;
+        ReloadCommand = new AsyncRelayCommand(() => LoadAsync());
+        ApplyFiltersCommand = new AsyncRelayCommand(() => ApplyFiltersAsync());
+        ClearFiltersCommand = new AsyncRelayCommand(() => ClearFiltersAsync());
+    }
 
     public IReadOnlyList<VideoDto> Videos
     {

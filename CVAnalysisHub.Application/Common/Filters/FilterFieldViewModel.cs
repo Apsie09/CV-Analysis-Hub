@@ -28,10 +28,35 @@ public sealed class FilterFieldViewModel(
 
     public IReadOnlyList<FilterOption> Options { get; } = options?.ToArray() ?? [];
 
+    public bool IsText => Type == FilterFieldType.Text;
+
+    public bool IsSelect => Type == FilterFieldType.Select;
+
+    public bool IsNumberRange => Type == FilterFieldType.NumberRange;
+
+    public bool IsDateRange => Type == FilterFieldType.DateRange;
+
+    public bool IsRange => IsNumberRange || IsDateRange;
+
+    public FilterOption? SelectedOption
+    {
+        get => Options.FirstOrDefault(option =>
+            string.Equals(option.Value, PrimaryValue, StringComparison.Ordinal));
+        set => PrimaryValue = value?.Value;
+    }
+
     public string? PrimaryValue
     {
         get => primaryValue;
-        set => SetProperty(ref primaryValue, value);
+        set
+        {
+            if (!SetProperty(ref primaryValue, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(SelectedOption));
+        }
     }
 
     public string? SecondaryValue
